@@ -70,17 +70,28 @@ function start() {
     ['二楼卧室',[.5,4.8,5],[.5,3.95,-1.7]],
     ['街边设施',[9,4,3],[2.8,1.5,-2.1]],
   ];
-  presets.forEach(([name,position,target]) => {
-    const button=document.createElement('button'); button.textContent=name;
-    button.addEventListener('click',()=>{camera.position.set(...position);controls.target.set(...target);controls.update();});
-    views.append(button);
-  });
+  function updateViews(definition) {
+    const choices = active.views || (definition.id === 'city' ? presets : []);
+    views.replaceChildren();
+    views.setAttribute('aria-label', definition.title + '细节视角');
+    views.hidden = choices.length === 0;
+    views.style.display = choices.length ? 'flex' : 'none';
+    choices.forEach(([name, position, target]) => {
+      const button = document.createElement('button'); button.textContent = name;
+      button.addEventListener('click', () => {
+        camera.position.set(...position); controls.target.set(...target); controls.update();
+      });
+      views.append(button);
+    });
+  }
   function switchScene() {
     const definition = scenes.find(s => s.id === select.value) || scenes[0];
     if(active) { world.remove(active.root); disposeRoot(active.root); }
     active = definition.create();
-    views.hidden = definition.id !== 'city';
-    views.style.display = definition.id === 'city' ? 'flex' : 'none';
+    updateViews(definition);
+    world.background.set(active.background || '#091322');
+    sun.color.set(active.lightColor || '#ffe1b0');
+    sun.intensity = active.lightIntensity ?? 4;
     world.add(active.root);
     elapsed = 0;
     active.update(0);
