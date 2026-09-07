@@ -20,7 +20,9 @@ function disposeRoot(root) {
     if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(m => materials.add(m));
   });
   geometries.forEach(g => g.dispose());
-  materials.forEach(m => m.dispose());
+  const textures = new Set();
+  materials.forEach(m => { for (const value of Object.values(m)) if(value?.isTexture) textures.add(value); m.dispose(); });
+  textures.forEach(t => t.dispose());
 }
 
 function start() {
@@ -29,6 +31,8 @@ function start() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
   viewport.append(renderer.domElement);
   const world = new THREE.Scene();
   world.background = new THREE.Color('#091322');
@@ -37,24 +41,46 @@ function start() {
   controls.enableDamping = true;
   controls.minDistance = 6;
   controls.maxDistance = 22;
-  controls.enablePan = false;
-  world.add(new THREE.HemisphereLight('#c7eaff','#514934',3));
+  controls.enablePan = true;
+  controls.maxPolarAngle = Math.PI * .49;
+  world.add(new THREE.HemisphereLight('#c7eaff','#514934',1.7));
   const sun = new THREE.DirectionalLight('#ffe1b0',4);
   sun.position.set(5,8,4);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024,1024);
-  Object.assign(sun.shadow.camera, { left:-6, right:6, top:6, bottom:-6 });
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.normalBias = .025;
+  Object.assign(sun.shadow.camera, { left:-10, right:10, top:10, bottom:-10 });
   world.add(sun);
 
   function reset() {
-    camera.position.set(9,7,10);
-    controls.target.set(0,0.4,0);
+    camera.position.set(...(active?.camera || [9,7,10]));
+    controls.target.set(...(active?.target || [0,.4,0]));
+    controls.minDistance = active?.minDistance ?? 6;
+    controls.maxDistance = active?.maxDistance ?? 22;
     controls.update();
   }
+  const views = document.createElement('div');
+  views.className = 'toolbar'; views.setAttribute('aria-label','城市细节视角');
+  viewport.before(views);
+  const presets = [
+    ['街角全景',[12,9,15],[-.4,2.5,0]],
+    ['店铺与陈列',[-1,2.6,7],[-1,1.6,-1]],
+    ['自动贩卖机',[5.2,2.4,5],[2.9,1.35,.9]],
+    ['二楼客厅',[-2.5,4.8,5],[-2.5,4,-1.7]],
+    ['二楼卧室',[.5,4.8,5],[.5,3.95,-1.7]],
+    ['街边设施',[9,4,3],[2.8,1.5,-2.1]],
+  ];
+  presets.forEach(([name,position,target]) => {
+    const button=document.createElement('button'); button.textContent=name;
+    button.addEventListener('click',()=>{camera.position.set(...position);controls.target.set(...target);controls.update();});
+    views.append(button);
+  });
   function switchScene() {
     const definition = scenes.find(s => s.id === select.value) || scenes[0];
     if(active) { world.remove(active.root); disposeRoot(active.root); }
     active = definition.create();
+    views.hidden = definition.id !== 'city';
+    views.style.display = definition.id === 'city' ? 'flex' : 'none';
     world.add(active.root);
     elapsed = 0;
     active.update(0);
@@ -96,6 +122,7 @@ function start() {
     sun.shadow.dispose();
     renderer.dispose();
     renderer.domElement.remove();
+    views.remove();
   };
   if(import.meta.hot) import.meta.hot.dispose(cleanup);
 }
