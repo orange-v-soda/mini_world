@@ -2,7 +2,15 @@
 
 由 **Three.js** 驱动的微型 3D 场景集合。当前包含森林小岛和轨道星球，支持场景切换、轨道相机、缩放、重置视角和暂停动画。
 
-## 本地开发
+## 在线访问（GitHub Pages）
+
+部署成功后访问：https://orange-v-soda.github.io/mini_world/
+
+首次发布：在仓库 Settings → Pages → Build and deployment 中，将 Source 设为 GitHub Actions。在 Actions 中运行 Deploy Mini World to GitHub Pages 工作流。此后每次推送到 main 都会自动重新构建并发布。
+
+工作流执行 npm ci、语法检查、生产构建及 Pages 部署。Vite 的 base 已设为 /mini_world/，确保资源在仓库子路径下正确加载。
+
+## 本地开发（可选）
 
 需要 Node.js 22.12 或更高版本。
 
