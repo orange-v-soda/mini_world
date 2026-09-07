@@ -1,3 +1,4 @@
+import { springRain } from './spring-rain.js';
 import { city } from './city.js';
 import * as THREE from 'three';
 
@@ -47,6 +48,7 @@ function orbit() {
 // Each factory returns a fresh root and an update(timeInSeconds) callback.
 // Keep GPU resources owned by that root; the viewer disposes them on switching.
 export const scenes = [
+  { id:'spring-rain', title:'春雨 · 柳岸听雨', description:'细雨落在柳岸，花朵随风轻摇，草尖水珠积聚、滴落，池面漾开涟漪。选择近景，寻找石上的蜗牛和长椅上的雨伞。', create:springRain },
   { id:'city', title:'街角 · 面包与日常', description:'烘焙咖啡店、饮料贩卖机与楼上的家。选择近景视角，放大观察物体结构。', create:city },
   { id:'forest', title:'森林小岛', description:'一座悬浮的小岛，一间藏在松林里的小屋。', create:forest },
   { id:'orbit', title:'轨道星球', description:'沿着倾斜的星环，观察一颗缓慢公转的卫星。', create:orbit }

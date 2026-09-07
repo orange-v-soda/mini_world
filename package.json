@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node --check src/main.js && node --check src/scenes/index.js"
+    "check": "node --check src/main.js && node --check src/scenes/index.js && node --check src/scenes/spring-rain.js"
   },
   "dependencies": {
     "three": "0.180.0"
