@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Mini World — 探索由 Three.js 驱动的微型 3D 世界"><title>Mini World</title></head>
+<body>
+<main id="app">
+<header><span class="eyebrow">THREE.JS / SCENE COLLECTION</span><h1>Mini World<span>微型世界</span></h1></header>
+<section class="toolbar" aria-label="场景控制"><label for="scene">探索场景</label><select id="scene"></select><button id="reset">重置视角</button><button id="motion" aria-pressed="false">暂停动画</button></section>
+<div id="viewport" aria-label="交互式 3D 场景"></div>
+<footer><div><span id="number" class="eyebrow"></span><h2 id="title"></h2><p id="description"></p></div><p class="help">拖拽旋转 · 滚轮缩放<br>触屏：单指旋转 · 双指缩放</p></footer>
+<p id="error" role="alert" hidden></p>
+</main><script type="module" src="/src/main.js"></script></body></html>
