@@ -84,8 +84,23 @@ function start() {
       views.append(button);
     });
   }
-  function switchScene() {
-    const definition = scenes.find(s => s.id === select.value) || scenes[0];
+  const seasonBar = document.createElement('div');
+  seasonBar.className = 'toolbar seasons'; seasonBar.setAttribute('aria-label', '四季雨景');
+  const seasonButtons = [];
+  const veil = document.createElement('div'); veil.className = 'season-veil'; veil.setAttribute('aria-hidden', 'true'); viewport.append(veil);
+  let transition = null;
+  let currentId;
+  [['spring','春 · 细雨'],['summer','夏 · 荷雨'],['autumn','秋 · 叶雨'],['winter','冬 · 冷雨']].forEach(([id,label]) => {
+    const button = document.createElement('button'); button.textContent = label; button.dataset.scene = id + '-rain';
+    button.addEventListener('click', () => { select.value = button.dataset.scene; switchScene(); });
+    seasonButtons.push(button); seasonBar.append(button);
+  });
+  views.before(seasonBar);
+  function applyScene(id) {
+    const definition = scenes.find(s => s.id === id) || scenes[0];
+    currentId = definition.id;
+    select.value = currentId;
+    seasonButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.scene === currentId)));
     if(active) { world.remove(active.root); disposeRoot(active.root); }
     active = definition.create();
     updateViews(definition);
@@ -99,6 +114,23 @@ function start() {
     document.querySelector('#description').textContent = definition.description;
     document.querySelector('#number').textContent = 'WORLD ' + String(scenes.indexOf(definition)+1).padStart(2,'0');
     reset();
+  }
+  function switchScene() {
+    const id = select.value || scenes[0].id;
+    if (!active || reducedMotion.matches || paused) {
+      transition = null; veil.style.opacity = '0'; applyScene(id); return;
+    }
+    if (id === currentId && !transition) return;
+    // Retarget an in-flight fade instead of stacking timers or extra scenes.
+    transition = { id, phase: 'out', opacity: Number(veil.style.opacity) || 0 };
+  }
+  function animateTransition(delta) {
+    if (!transition) return;
+    const tr = transition;
+    tr.opacity = Math.max(0, Math.min(1, tr.opacity + (tr.phase === 'out' ? 1 : -1) * delta / .38));
+    veil.style.opacity = String(tr.opacity * tr.opacity * (3 - 2 * tr.opacity));
+    if (tr.phase === 'out' && tr.opacity === 1) { applyScene(tr.id); tr.phase = 'in'; }
+    else if (tr.phase === 'in' && tr.opacity === 0) transition = null;
   }
   scenes.forEach(s => select.add(new Option(s.title,s.id)));
   select.addEventListener('change',switchScene);
@@ -121,6 +153,7 @@ function start() {
     const delta = previous ? Math.min((timestamp-previous)/1000,0.05) : 0;
     previous = timestamp;
     if(!paused && !document.hidden) elapsed += delta;
+    animateTransition(delta);
     active.update(elapsed);
     controls.update();
     renderer.render(world,camera);
@@ -133,7 +166,7 @@ function start() {
     sun.shadow.dispose();
     renderer.dispose();
     renderer.domElement.remove();
-    views.remove();
+    views.remove(); seasonBar.remove(); veil.remove();
   };
   if(import.meta.hot) import.meta.hot.dispose(cleanup);
 }

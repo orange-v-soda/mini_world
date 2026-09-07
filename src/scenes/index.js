@@ -49,6 +49,11 @@ function orbit() {
 // Keep GPU resources owned by that root; the viewer disposes them on switching.
 export const scenes = [
   { id:'spring-rain', title:'春雨 · 柳岸听雨', description:'细雨落在柳岸，花朵随风轻摇，草尖水珠积聚、滴落，池面漾开涟漪。选择近景，寻找石上的蜗牛和长椅上的雨伞。', create:springRain },
+  ...[
+    ['summer','夏雨 · 荷塘凝珠','荷花舒展，绣球含雨，荷叶水珠轻滚，岸边小蛙藏在丰茂的绿意中。'],
+    ['autumn','秋雨 · 金叶听澜','金色柳叶随风旋落，池中浮叶缓缓转动，枯穗、秋菇和湿落叶留住秋雨。'],
+    ['winter','冬雨 · 寒岸初融','晚冬冷雨落入未冻池心，岸冰、残霜、红果与雪花莲相伴，长椅冰凌渐渐滴水。'],
+  ].map(([season,title,description]) => ({id:season+'-rain',title,description,create:()=>springRain(season)})),
   { id:'city', title:'街角 · 面包与日常', description:'烘焙咖啡店、饮料贩卖机与楼上的家。选择近景视角，放大观察物体结构。', create:city },
   { id:'forest', title:'森林小岛', description:'一座悬浮的小岛，一间藏在松林里的小屋。', create:forest },
   { id:'orbit', title:'轨道星球', description:'沿着倾斜的星环，观察一颗缓慢公转的卫星。', create:orbit }

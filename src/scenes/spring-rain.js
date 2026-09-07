@@ -1,13 +1,18 @@
+import { seasonDetails } from './season-details.js';
 import * as T from 'three';
 
 // A deterministic, self-contained diorama. All animation uses viewer time,
 // so pausing, resetting and switching scenes never leave background timers.
-export function springRain() {
+export function springRain(season = 'spring') {
   const root = new T.Group();
+  const winter = season === 'winter', autumn = season === 'autumn';
+  const palette = winter ? {'#62876a':'#788887','#7fa771':'#a0a695','#538c88':'#66868f','#79ae67':'#969e83','#85b971':'#abb39c'} : autumn ? {'#62876a':'#928568','#7fa771':'#b4a168','#83b66c':'#bba357','#b5cb7c':'#d6b56c','#538c88':'#71877b','#79ae67':'#b7a167','#85b971':'#c2af77'} : season === 'summer' ? {'#62876a':'#4d795d','#83b66c':'#4a965d','#b5cb7c':'#7eae64','#538c88':'#397c79'} : {};
+
   let seed = 731;
   const random = () => { seed = (1664525 * seed + 1013904223) >>> 0; return seed / 4294967296; };
   const materials = new Map();
   const material = (color, options = {}) => {
+    color = palette[color] || color;
     const key = JSON.stringify([color, options]);
     if (!materials.has(key)) materials.set(key, new T.MeshStandardMaterial({ color, roughness: .66, ...options }));
     return materials.get(key);
@@ -60,7 +65,7 @@ export function springRain() {
     const spray = new T.Group(); spray.position.set(x, y, z); willow.add(spray);
     const length = 1.4 + random() * 1.5;
     branch([[0, 0, 0], [.11, -length * .35, .05], [.17, -length * .7, 0], [.26, -length, .08]], .012, '#889756', spray);
-    for (let j = 0; j < 13; j++) {
+    for (let j = 0; j < (winter ? 0 : autumn ? 7 : 13); j++) {
       const f = (j + .4) / 13;
       const l = mesh(leaf, j % 3 ? '#83b66c' : '#b5cb7c', [.22 * f + (j % 2 ? .075 : -.075), -length * f, .025], [.045, .17, .022], spray);
       l.rotation.z = j % 2 ? -.45 : .45;
@@ -89,7 +94,7 @@ export function springRain() {
     return group;
   }
   // Foreground flowers are deliberately large enough for macro camera presets.
-  for (let i = 0; i < 44; i++) {
+  for (let i = 0; i < (season === 'spring' ? 44 : 0); i++) {
     const x = -4.3 + random() * 3.1, z = 1.2 + random() * 2.4;
     if (Math.hypot(x, z) < 5.05 && Math.abs(x + 1.7 + Math.sin((4.3 - z) / .59 * .27) * .9) > .55) plant(x, z, .3 + random() * .4, true);
   }
@@ -121,16 +126,18 @@ export function springRain() {
   }
   // Reeds, lily pads, a floating petal and a tiny snail on a wet stone.
   for (let i = 0; i < 12; i++) plant(3.4 + random() * .35, -.7 + random() * .9, .65 + random() * .4);
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < (winter || autumn ? 0 : 7); i++) {
     const pad = mesh(new T.CircleGeometry(.19 + random() * .12, 24, .12, Math.PI * 1.88), '#77a581', [.3 + random() * 2, .053, -.45 + random()], [1, 1, 1], root, wet); pad.rotation.x = -Math.PI / 2; pad.rotation.z = random() * 6;
   }
   sphere([-.4, .22, 2.62], [.42, .2, .32], '#99a59a', root, wet);
+  if (!winter) {
   sphere([-.4, .43, 2.62], [.16, .05, .055], '#b4aa87');
   sphere([-.43, .51, 2.62], [.087, .085, .07], '#a07750');
   for (let i = 0; i < 3; i++) {
     const curl = mesh(new T.TorusGeometry(.065 - i * .017, .006, 4, 20), '#d6b385', [-.43, .51, 2.69]); curl.rotation.z = i;
   }
   for (const z of [2.59, 2.66]) branch([[-.27, .45, z], [-.23, .53, z]], .006, '#b4aa87');
+  }
   // Weathered wooden bench and a folded red umbrella on the back bank.
   for (const x of [1.5, 2.7]) for (const z of [-3.35, -2.85]) mesh(cube, '#526662', [x, .3, z], [.09, .6, .09]);
   for (let i = 0; i < 4; i++) mesh(cube, '#9c8464', [2.1, .62, -3.4 + i * .18], [1.65, .08, .14], root, wet);
@@ -139,7 +146,9 @@ export function springRain() {
   const umbrella = mesh(new T.ConeGeometry(.14, 1.1, 8), '#ac7066', [2.3, .76, -3.06]); umbrella.rotation.z = Math.PI / 2;
   branch([[1.7, .76, -3.06], [1.5, .76, -3.06], [1.46, .83, -3.06], [1.54, .86, -3.06]], .018, '#ded0a7');
   // Transparent rain uses one line draw call; rings are pooled and recycled.
-  const count = 950, positions = new Float32Array(count * 6), rainSeeds = [];
+  const count = season === 'summer' ? 1450 : winter ? 650 : 950;
+  const rainSpeed = season === 'summer' ? 1.5 : winter ? .8 : 1;
+  const positions = new Float32Array(count * 6), rainSeeds = [];
   for (let i = 0; i < count; i++) rainSeeds.push([random(), random(), random(), random()]);
   const rainGeometry = new T.BufferGeometry(); rainGeometry.setAttribute('position', new T.BufferAttribute(positions, 3).setUsage(T.DynamicDrawUsage));
   const rain = new T.LineSegments(rainGeometry, new T.LineBasicMaterial({ color: '#c8e1dc', transparent: true, opacity: .3, depthWrite: false })); rain.frustumCulled = false; root.add(rain);
@@ -148,9 +157,12 @@ export function springRain() {
     return { obj: ripple(1.25 + Math.cos(a) * r * 2.5, .5 + Math.sin(a) * r * 1.75), phase: i / 32 };
   });
   const petal = sphere([1, .08, .7], [.09, .015, .05], '#efd2c8');
+  petal.visible = season === 'spring';
+  const updateSeason = seasonDetails(season, { root, mesh, sphere, branch, leaf, random, ripple });
+  const detailNames = { summer: ['盛夏荷塘','绣球含雨','荷叶凝珠','绿柳骤雨','荷花听雨','雨中长椅'], autumn: ['秋雨柳岸','林下秋菇','枯穗滴雨','金叶飘落','浮叶雨纹','秋日长椅'], winter: ['冬雨初融','红果寒枝','岸冰冷雨','疏柳冬雨','薄冰融池','冰凌滴水'] }[season];
   return {
     root, camera: [10, 8, 12], target: [0, 1.2, 0], minDistance: 1.2, maxDistance: 24,
-    background: '#263e42', lightColor: '#d5eeea', lightIntensity: 2.1,
+    background: winter ? '#303e4e' : autumn ? '#45433b' : season === 'summer' ? '#203d3c' : '#263e42', lightColor: '#d5eeea', lightIntensity: 2.1,
     views: [
       ['柳岸全景', [10, 8, 12], [0, 1.2, 0]],
       ['风中小花', [-4.4, 1.55, 5], [-3.15, .45, 2.65]],
@@ -158,8 +170,15 @@ export function springRain() {
       ['柳丝听雨', [0, 3.4, 5], [-2.3, 2.2, -1.35]],
       ['池面涟漪', [5.6, 4.7, 5], [1.25, .1, .5]],
       ['雨中长椅', [4.7, 2.7, -.8], [2.1, .65, -3.15]],
-    ],
+    ].map((view, i) => {
+      if (!detailNames) return view;
+      if (season === 'summer' && i === 2) return [detailNames[i], [3.5,2.5,4], [1.2,.5,.5]];
+      if (autumn && i === 1) return [detailNames[i], [-4.8,1.3,2], [-3.5,.3,.1]];
+      if (winter && i === 2) return [detailNames[i], [4.6,1.6,4], [2.6,.15,1.5]];
+      return [detailNames[i], ...view.slice(1)];
+    }),
     update(time) {
+      updateSeason(time);
       const wind = Math.sin(time * .72) * .045 + Math.sin(time * 1.31) * .018;
       for (const s of sprays) { s.obj.rotation.z = wind * s.weight + Math.sin(time * 1.7 + s.phase) * .035; s.obj.rotation.x = Math.sin(time * 1.1 + s.phase) * .04; }
       for (const p of plants) { p.obj.rotation.z = wind + Math.sin(time * 1.9 + p.phase) * .04 * p.weight; p.obj.rotation.x = Math.cos(time * 1.3 + p.phase) * .025; }
@@ -174,7 +193,7 @@ export function springRain() {
         d.ring.scale.setScalar(.01 + splash * .2); d.ring.material.opacity = cycle >= .87 ? (1 - splash) * .5 : 0;
       }
       for (let i = 0; i < count; i++) {
-        const [a, b, c, speed] = rainSeeds[i], y = ((b * 6 - time * (2.5 + speed) % 6) + 6) % 6;
+        const [a, b, c, speed] = rainSeeds[i], y = ((b * 6 - time * rainSpeed * (2.5 + speed) % 6) + 6) % 6;
         const x = (a - .5) * 10.3 + wind * y, z = (c - .5) * 10.3;
         const k = i * 6; positions[k] = x; positions[k + 1] = y; positions[k + 2] = z;
         positions[k + 3] = x - .025 - wind; positions[k + 4] = y + .13 + speed * .09; positions[k + 5] = z;
