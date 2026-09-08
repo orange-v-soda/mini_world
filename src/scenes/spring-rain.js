@@ -1,3 +1,4 @@
+import { batchStaticMeshes } from './batch-static.js';
 import { seasonDetails } from './season-details.js';
 import * as T from 'three';
 
@@ -158,7 +159,10 @@ export function springRain(season = 'spring') {
   });
   const petal = sphere([1, .08, .7], [.09, .015, .05], '#efd2c8');
   petal.visible = season === 'spring';
+  petal.userData.dynamic = true;
+  droplets.forEach(d => d.bead.userData.dynamic = true);
   const updateSeason = seasonDetails(season, { root, mesh, sphere, branch, leaf, random, ripple });
+  batchStaticMeshes(root);
   const detailNames = { summer: ['盛夏荷塘','绣球含雨','荷叶凝珠','绿柳骤雨','荷花听雨','雨中长椅'], autumn: ['秋雨柳岸','林下秋菇','枯穗滴雨','金叶飘落','浮叶雨纹','秋日长椅'], winter: ['冬雨初融','红果寒枝','岸冰冷雨','疏柳冬雨','薄冰融池','冰凌滴水'] }[season];
   return {
     root, camera: [10, 8, 12], target: [0, 1.2, 0], minDistance: 1.2, maxDistance: 24,

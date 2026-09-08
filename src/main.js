@@ -17,6 +17,7 @@ function disposeRoot(root) {
   const materials = new Set();
   root.traverse((object) => {
     if (object.geometry) geometries.add(object.geometry);
+    if (object.isInstancedMesh) object.dispose();
     if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(m => materials.add(m));
   });
   geometries.forEach(g => g.dispose());
@@ -27,8 +28,8 @@ function disposeRoot(root) {
 
 function start() {
   const renderer = new THREE.WebGLRenderer({ antialias:true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(1);
+  renderer.shadowMap.enabled = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -99,9 +100,11 @@ function start() {
   function applyScene(id) {
     const definition = scenes.find(s => s.id === id) || scenes[0];
     currentId = definition.id;
+    const url = new URL(location.href); url.searchParams.set('scene',currentId);
+    history.replaceState(null,'',url);
     select.value = currentId;
     seasonButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.scene === currentId)));
-    if(active) { world.remove(active.root); disposeRoot(active.root); }
+    if(active) { world.remove(active.root); active.dispose?.(); disposeRoot(active.root); }
     active = definition.create();
     updateViews(definition);
     world.background.set(active.background || '#091322');
@@ -133,6 +136,24 @@ function start() {
     else if (tr.phase === 'in' && tr.opacity === 0) transition = null;
   }
   scenes.forEach(s => select.add(new Option(s.title,s.id)));
+  const requested = new URLSearchParams(location.search).get('scene');
+  select.value = scenes.some(s => s.id === requested) ? requested : 'city';
+  const quality = document.createElement('select');
+  quality.setAttribute('aria-label','渲染质量');
+  quality.add(new Option('流畅模式','low'));
+  quality.add(new Option('精细阴影','high'));
+  select.after(quality);
+  quality.addEventListener('change', () => {
+    const high = quality.value === 'high';
+    renderer.setPixelRatio(high ? Math.min(devicePixelRatio,1.5) : 1);
+    renderer.shadowMap.enabled = high;
+    world.traverse(o => { if(o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.needsUpdate = true); });
+    renderer.shadowMap.needsUpdate = true;
+  });
+  const cityButton = document.createElement('button');
+  cityButton.textContent = '猫猫街角';
+  cityButton.addEventListener('click', () => { select.value='city'; switchScene(); });
+  seasonBar.prepend(cityButton);
   select.addEventListener('change',switchScene);
   document.querySelector('#reset').addEventListener('click',reset);
   function updateMotion() {
@@ -149,12 +170,16 @@ function start() {
     renderer.setSize(width,height);
   });
   observer.observe(viewport);
+  let lastFrame = 0;
   renderer.setAnimationLoop((timestamp) => {
+    if(document.hidden) { previous=0; lastFrame=0; return; }
+    if(timestamp-lastFrame < 1000/30) return;
+    lastFrame=timestamp;
     const delta = previous ? Math.min((timestamp-previous)/1000,0.05) : 0;
     previous = timestamp;
     if(!paused && !document.hidden) elapsed += delta;
     animateTransition(delta);
-    active.update(elapsed);
+    if(!paused) active.update(elapsed);
     controls.update();
     renderer.render(world,camera);
   });
@@ -166,7 +191,7 @@ function start() {
     sun.shadow.dispose();
     renderer.dispose();
     renderer.domElement.remove();
-    views.remove(); seasonBar.remove(); veil.remove();
+    views.remove(); seasonBar.remove(); veil.remove(); quality.remove();
   };
   if(import.meta.hot) import.meta.hot.dispose(cleanup);
 }

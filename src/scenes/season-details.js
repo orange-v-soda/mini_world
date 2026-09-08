@@ -25,6 +25,7 @@ export function seasonDetails(season, kit) {
         }
         sphere([.2,.85,.15],[.05,.05,.05],'#ebcf63',g);
       }
+      bead.userData.dynamic = true; pad.userData.dynamic = true;
       moving.push(t=>{g.rotation.z=Math.sin(t*1.3+i)*.028;bead.position.x=.18+Math.sin(t*.9+i)*.07;pad.rotation.z=Math.sin(t+i)*.025;});
     }
     // Hydrangea clusters: small flowers, individual wet leaves and drips.
@@ -99,6 +100,7 @@ export function seasonDetails(season, kit) {
       const x=1.4+i*.17,h=.09+random()*.12;
       const icicle=mesh(new T.ConeGeometry(.025,h,6),'#bcdde0',[x,.62-h/2,-2.83],[1,1,1],root,{roughness:.1});icicle.rotation.z=Math.PI;
       const drop=sphere([x,.4,-2.83],[.021,.033,.021],'#d5f0ef',root,{roughness:.05});
+      drop.userData.dynamic = true;
       const ring=ripple(x,-2.83,root,.085);
       moving.push(t=>{const f=(t*.43+i*.13)%1;drop.visible=f<.8;drop.position.y=.62-h-Math.pow(f/.8,2)*(.54-h);ring.scale.setScalar(.01+Math.max(0,f-.8)*.7);ring.material.opacity=f>.8?(1-f)*2:0;});
     }
