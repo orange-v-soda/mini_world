@@ -1,3 +1,4 @@
+import { addStreetLife } from './street-life.js';
 import * as T from 'three';
 
 // All dimensions are in metres. Front faces +Z; the side street is on +X.
@@ -336,7 +337,8 @@ export function city() {
     list.forEach((m,i)=>{instanced.setMatrixAt(i,m.matrix);root.remove(m);});
     instanced.castShadow=true;instanced.receiveShadow=true;root.add(instanced);
   }
+  const updateLife = addStreetLife(root);
   return {root, camera:[12,9,15],target:[-.4,2.5,0], minDistance:2, maxDistance:32,
-    update(time){animated.forEach(f=>f.rotation.y=time*.8);}};
+    update(time){animated.forEach(f=>f.rotation.y=time*.8);updateLife(time);}};
 }
 
