@@ -11,7 +11,7 @@ function mesh(geometry, color, position = [0, 0, 0]) {
   return object;
 }
 
-function addBox(root, size, color, position) {
+function box(root, size, color, position) {
   const item = mesh(new THREE.BoxGeometry(...size), color, position);
   root.add(item);
   return item;
@@ -21,50 +21,70 @@ export function nightLantern() {
   const root = new THREE.Group();
   const animated = [];
 
-  // Wet alley street.
-  addBox(root, [16, 0.12, 12], '#24262b', [0, -0.08, 0]);
-  addBox(root, [16, 0.12, 1.8], '#3d4142', [0, 0, 4.5]);
-  addBox(root, [16, 0.03, 0.08], '#d7c38a', [0, 0.08, 3.55]);
+  // Wet street and sidewalk.
+  box(root, [18, .12, 14], '#202328', [0, -.08, 0]);
+  box(root, [18, .18, 2.2], '#464744', [0, .02, 4.8]);
+  box(root, [18, .03, .08], '#d6c28b', [0, .14, 3.65]);
+  for (let i = -7; i <= 7; i += 1.2) {
+    box(root, [.9, .01, .03], '#77736a', [i, .08, 4.35]);
+  }
 
-  // Three-storey street facade.
-  addBox(root, [8, 7, 0.35], '#51433d', [-2, 3.5, -4]);
-  addBox(root, [3.2, 2.2, 0.08], '#18242a', [-2, 5.1, -3.78]);
-  addBox(root, [3.2, 2.2, 0.08], '#18242a', [2, 5.1, -3.78]);
+  // Main street building.
+  box(root, [10, 8, .45], '#51443f', [-2.2, 4, -4.2]);
+  box(root, [10.5, .25, .55], '#332b29', [-2.2, 8.1, -4.2]);
 
-  // Shop front.
-  addBox(root, [3, 3.2, 0.18], '#60432f', [-2, 1.6, -3.72]);
-  addBox(root, [2.4, 2.5, 0.04], '#ffc66d', [-2, 1.55, -3.62]);
-  addBox(root, [4.8, 0.45, 0.12], '#173f39', [-2, 3.35, -3.72]);
+  // Windows and warm interiors.
+  for (const x of [-5, -2.2, .6]) {
+    for (const y of [5.1, 6.7]) {
+      box(root, [1.5, .9, .05], '#18262b', [x, y, -3.95]);
+      const glow = box(root, [1.25, .65, .02], '#dca95d', [x, y, -3.91]);
+      animated.push(glow);
+    }
+  }
+
+  // Ground floor shop.
+  box(root, [4, 3.2, .25], '#634532', [-2.2, 1.7, -4]);
+  box(root, [3.3, 2.5, .03], '#ffd17b', [-2.2, 1.7, -3.84]);
+  box(root, [5.8, .5, .18], '#173f39', [-2.2, 3.45, -4]);
+
+  // Sign board.
+  box(root, [3.8, .45, .08], '#8c4437', [-2.2, 3.9, -3.75]);
+
+  // Air conditioner and pipes.
+  box(root, [1.1, .5, .5], '#b7b4aa', [1.8, 6, -3.7]);
+  box(root, [.08, 2, .08], '#55585a', [2.4, 4.7, -3.7]);
 
   // Outdoor seating.
-  addBox(root, [0.9, 0.08, 0.9], '#8b5a35', [2, 0.55, 1]);
-  addBox(root, [0.12, 0.5, 0.12], '#4b3020', [2, 0.25, 1]);
-  addBox(root, [0.5, 0.45, 0.5], '#8b5a35', [3.2, 0.25, 1]);
-  addBox(root, [0.5, 0.45, 0.5], '#8b5a35', [0.8, 0.25, 1]);
+  box(root, [1.1, .08, 1], '#875432', [2.6, .6, .8]);
+  box(root, [.12, .5, .12], '#493020', [2.6, .3, .8]);
+  for (const x of [1.5, 3.7]) {
+    box(root, [.55, .45, .55], '#875432', [x, .3, .8]);
+  }
 
-  // Street lamp and lantern.
-  addBox(root, [0.12, 4, 0.12], '#302820', [5, 2, -1]);
-  const lantern = mesh(new THREE.SphereGeometry(0.4, 20, 12), '#ffd36b', [5, 4, -1]);
+  // Lamp post and lantern.
+  box(root, [.14, 4.5, .14], '#302820', [5, 2.2, -1]);
+  const lantern = mesh(new THREE.SphereGeometry(.42, 20, 12), '#ffd36b', [5, 4.6, -1]);
   root.add(lantern);
   animated.push(lantern);
 
-  // Plant boxes and street objects.
-  [-5, -4.3, 3.8].forEach((x) => {
-    addBox(root, [0.5, 0.4, 0.5], '#594332', [x, 0.2, 2]);
-    root.add(mesh(new THREE.ConeGeometry(0.5, 1.4, 8), '#315b45', [x, 1, 2]));
-  });
+  // Plants and trash bin.
+  for (const x of [-6, -5.3, 4]) {
+    box(root, [.5, .4, .5], '#594332', [x, .2, 2]);
+    root.add(mesh(new THREE.ConeGeometry(.5, 1.5, 8), '#315b45', [x, 1, 2]));
+  }
+  box(root, [.5, .9, .5], '#30383b', [4.5, .45, 2]);
 
-  // Bicycle silhouette.
-  const wheel1 = mesh(new THREE.TorusGeometry(0.35, 0.035, 8, 24), '#202124', [-4, 0.38, 0.5]);
-  const wheel2 = mesh(new THREE.TorusGeometry(0.35, 0.035, 8, 24), '#202124', [-2.8, 0.38, 0.5]);
-  root.add(wheel1, wheel2);
-  addBox(root, [1.2, 0.04, 0.04], '#444', [-3.4, 0.7, 0.5]);
+  // Bicycle.
+  for (const x of [-4.8, -3.5]) {
+    root.add(mesh(new THREE.TorusGeometry(.38, .035, 8, 24), '#202124', [x, .38, .5]));
+  }
+  box(root, [1.4, .04, .04], '#444', [-4.15, .75, .5]);
 
   return {
     root,
     update(time) {
-      animated.forEach((item) => {
-        item.scale.setScalar(1 + Math.sin(time * 2) * 0.08);
+      animated.forEach((item, index) => {
+        item.scale.setScalar(1 + Math.sin(time * 2 + index) * .04);
       });
     },
   };
