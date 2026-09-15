@@ -11,53 +11,60 @@ function mesh(geometry, color, position = [0, 0, 0]) {
   return object;
 }
 
-function box(root, size, color, position) {
-  root.add(mesh(new THREE.BoxGeometry(...size), color, position));
+function addBox(root, size, color, position) {
+  const item = mesh(new THREE.BoxGeometry(...size), color, position);
+  root.add(item);
+  return item;
 }
 
 export function nightLantern() {
   const root = new THREE.Group();
   const animated = [];
 
-  // Wet night street, pavement and curb.
-  box(root, [12, 0.15, 10], '#25262b', [0, -0.1, 0]);
-  box(root, [12, 0.06, 1.2], '#3b3b3d', [0, 0, 3.8]);
-  box(root, [12, 0.08, 0.08], '#d7c38a', [0, 0.05, 3.15]);
+  // Wet alley street.
+  addBox(root, [16, 0.12, 12], '#24262b', [0, -0.08, 0]);
+  addBox(root, [16, 0.12, 1.8], '#3d4142', [0, 0, 4.5]);
+  addBox(root, [16, 0.03, 0.08], '#d7c38a', [0, 0.08, 3.55]);
 
-  // Narrow alley building facade.
-  box(root, [7, 4.8, 0.35], '#473b39', [-1, 2.3, -3.8]);
-  box(root, [2.8, 2.5, 0.12], '#16252b', [-1, 2.2, -3.62]);
+  // Three-storey street facade.
+  addBox(root, [8, 7, 0.35], '#51433d', [-2, 3.5, -4]);
+  addBox(root, [3.2, 2.2, 0.08], '#18242a', [-2, 5.1, -3.78]);
+  addBox(root, [3.2, 2.2, 0.08], '#18242a', [2, 5.1, -3.78]);
 
-  // Bakery / bar entrance with warm interior.
-  box(root, [2.2, 2.8, 0.18], '#6b4832', [0.2, 1.4, -3.55]);
-  box(root, [1.7, 1.9, 0.04], '#ffc66d', [0.2, 1.35, -3.43]);
+  // Shop front.
+  addBox(root, [3, 3.2, 0.18], '#60432f', [-2, 1.6, -3.72]);
+  addBox(root, [2.4, 2.5, 0.04], '#ffc66d', [-2, 1.55, -3.62]);
+  addBox(root, [4.8, 0.45, 0.12], '#173f39', [-2, 3.35, -3.72]);
 
-  // Wooden sign.
-  box(root, [2.6, 0.5, 0.12], '#8b4338', [-1, 4.1, -3.55]);
+  // Outdoor seating.
+  addBox(root, [0.9, 0.08, 0.9], '#8b5a35', [2, 0.55, 1]);
+  addBox(root, [0.12, 0.5, 0.12], '#4b3020', [2, 0.25, 1]);
+  addBox(root, [0.5, 0.45, 0.5], '#8b5a35', [3.2, 0.25, 1]);
+  addBox(root, [0.5, 0.45, 0.5], '#8b5a35', [0.8, 0.25, 1]);
 
-  // Street furniture.
-  box(root, [0.8, 0.08, 0.8], '#8b5a35', [2.2, 0.55, 1]);
-  box(root, [0.12, 0.5, 0.12], '#4b3020', [2.2, 0.25, 1]);
-  box(root, [0.45, 0.08, 0.45], '#a06b3d', [3, 0.55, 1]);
-
-  // Lantern poles.
-  box(root, [0.12, 3.2, 0.12], '#302820', [3.8, 1.6, -0.8]);
-  const lantern = mesh(new THREE.SphereGeometry(0.35, 16, 12), '#ffd36b', [3.8, 3.1, -0.8]);
+  // Street lamp and lantern.
+  addBox(root, [0.12, 4, 0.12], '#302820', [5, 2, -1]);
+  const lantern = mesh(new THREE.SphereGeometry(0.4, 20, 12), '#ffd36b', [5, 4, -1]);
   root.add(lantern);
   animated.push(lantern);
 
-  // Plants and street details.
-  for (const x of [-3.3, -2.9, 2.9]) {
-    box(root, [0.35, 0.35, 0.35], '#594332', [x, 0.2, 1.8]);
-    const plant = mesh(new THREE.ConeGeometry(0.45, 1.2, 8), '#315b45', [x, 0.9, 1.8]);
-    root.add(plant);
-  }
+  // Plant boxes and street objects.
+  [-5, -4.3, 3.8].forEach((x) => {
+    addBox(root, [0.5, 0.4, 0.5], '#594332', [x, 0.2, 2]);
+    root.add(mesh(new THREE.ConeGeometry(0.5, 1.4, 8), '#315b45', [x, 1, 2]));
+  });
+
+  // Bicycle silhouette.
+  const wheel1 = mesh(new THREE.TorusGeometry(0.35, 0.035, 8, 24), '#202124', [-4, 0.38, 0.5]);
+  const wheel2 = mesh(new THREE.TorusGeometry(0.35, 0.035, 8, 24), '#202124', [-2.8, 0.38, 0.5]);
+  root.add(wheel1, wheel2);
+  addBox(root, [1.2, 0.04, 0.04], '#444', [-3.4, 0.7, 0.5]);
 
   return {
     root,
     update(time) {
       animated.forEach((item) => {
-        item.scale.setScalar(1 + Math.sin(time * 2) * 0.06);
+        item.scale.setScalar(1 + Math.sin(time * 2) * 0.08);
       });
     },
   };
